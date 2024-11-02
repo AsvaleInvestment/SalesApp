@@ -28,6 +28,30 @@ async function getAllAccounts_db(Firstname = ""){
     })
 }
 
+
+/**
+ * @returns accounts in json
+ */
+async function getAllAccountExecutives(){
+    return new Promise((resolve,reject)=>{
+        let data = [];
+        let query = db.collection(collection)
+                    .where("Role", "==", "Account Executive");
+
+        query.get()
+        .then((querySnapshot) => {
+            querySnapshot.forEach((doc) => {
+                let docData = {"_id": doc.id, ...doc.data()}
+                data.push(docData);
+            });
+            resolve(data);
+        })
+        .catch((err)=>{
+            reject(err)
+        });
+    })
+}
+
 async function addExecutiveAccount(jsonObject){
     return await addExecutiveAccount_db(jsonObject);
 }

@@ -10,8 +10,8 @@ const update_Active = document.getElementById("update_Active");
 const update_Email = document.getElementById("update_Email");
 const update_Linkedin = document.getElementById("update_Linkedin");
 const update_Birthday = document.getElementById("update_Birthday");
-const update_Location = document.getElementById("update_Location");
 const update_Serving = document.getElementById("update_Serving");
+const update_Role = document.getElementById("update_Role");
 const update_Title = document.getElementById("update_Title");
 const update_Department = document.getElementById("update_Department");
 const update_Exposure = document.getElementById("update_Exposure");
@@ -37,7 +37,7 @@ async function getAllAccounts(Firstname = ""){
     tableContent.innerHTML = ""
     spinnerStatus(false);
     try{
-        const jsonData = await getAllAccounts_db(Firstname);
+        const jsonData = await getAllAccountExecutives(Firstname);
         console.log(jsonData);
         showAccounts(jsonData);
     }catch (err){
@@ -63,12 +63,12 @@ function renderAccount(tr,data, index){
     <td>${data.Lastname}</td>
     <td>${data.Active}</td>
     <td>${data.Email}</td>
+    <td>${data.Role}</td>
     <td>${data.Title}</td>
     <td>${data.Current_Company}</td>
     <td>${data.Department}</td>
     <td>${data.Exposure}</td>
-    <td>${data.Linkedin}</td>
-    <td>${data.Serving}</td>
+    <td><a href="${data.Linkedin}">${data.Linkedin}</a></td>
     <td>
         <a class="link-primary me-2" href="#" onclick="fillUpdateForm(this)" data-bs-toggle="modal" data-bs-target="#updateAccountForm">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pen" viewBox="0 0 16 16">
@@ -131,8 +131,8 @@ function fillUpdateForm(updateButton){
     update_Linkedin.value = data.Linkedin;
     update_Birthday.value = timestampToDate_formInput(data.Birthday.seconds);
 
-    update_Location.value = data.Location;
     update_Serving.value = data.Serving;
+    update_Role.value = data.Role;
     update_Title.value = data.Title;
     update_Department.value = data.Department;
     update_Exposure.value = data.Exposure;
