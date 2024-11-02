@@ -28,6 +28,10 @@ async function getAllAccounts_db(Firstname = ""){
     })
 }
 
+async function addExecutiveAccount(jsonObject){
+    return await addExecutiveAccount_db(jsonObject);
+}
+
 
 /**
  * 
@@ -57,17 +61,7 @@ async function addExecutiveAccount_db(jsonObject){
  * @param {String} Linkedin 
  * @param {String} Birthday 
  */
-async function updateAccount_db(objectId, Firstname, Lastname, Active, Email, Linkedin, Birthday){
-    let jsonObject = {
-        Firstname,
-        Lastname,
-        Active,
-        Email,
-        Linkedin,
-        Birthday
-    }
-    console.log(objectId);
-    console.log(jsonObject);
+async function updateAccount_db(objectId, jsonObject){
     return new Promise((resolve,reject)=>{
         db.collection(collection).doc(objectId).update(jsonObject)
         .then(() => {

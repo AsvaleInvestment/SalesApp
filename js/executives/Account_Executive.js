@@ -10,6 +10,14 @@ const update_Active = document.getElementById("update_Active");
 const update_Email = document.getElementById("update_Email");
 const update_Linkedin = document.getElementById("update_Linkedin");
 const update_Birthday = document.getElementById("update_Birthday");
+const update_Location = document.getElementById("update_Location");
+const update_Serving = document.getElementById("update_Serving");
+const update_Title = document.getElementById("update_Title");
+const update_Department = document.getElementById("update_Department");
+const update_Exposure = document.getElementById("update_Exposure");
+const update_Current_Company = document.getElementById("update_Current_Company");
+const update_Last_Contact = document.getElementById("update_Last_Contact");
+const update_Last_Comments = document.getElementById("update_Last_Comments");
 const form_updateAccount = document.getElementById("form_updateAccount");
 
 
@@ -30,6 +38,7 @@ async function getAllAccounts(Firstname = ""){
     spinnerStatus(false);
     try{
         const jsonData = await getAllAccounts_db(Firstname);
+        console.log(jsonData);
         showAccounts(jsonData);
     }catch (err){
         if (! err instanceof SyntaxError){
@@ -48,13 +57,7 @@ function showAccounts(accountsData){
     });
 }
 function renderAccount(tr,data, index){
-    tr.dataset.objectId = data["_id"];
-    tr.dataset.Firstname = data.Firstname;
-    tr.dataset.Lastname = data.Lastname;
-    tr.dataset.Active = data.Active;
-    tr.dataset.Email = data.Email;
-    tr.dataset.Linkedin = data.Linkedin;
-    tr.dataset.Birthday = timestampToDate_formInput(data.Birthday.seconds);
+    tr.dataset.allData = JSON.stringify(data);
     tr.innerHTML = `
     <th>${index+1}</th>
     <td>${data.Firstname}</td>
@@ -91,7 +94,13 @@ form_createAccount.addEventListener("submit", async (ev) => {
     let birthdayDate = new Date(jsonObject.Birthday);
     let timestamp = firebase.firestore.Timestamp.fromDate(birthdayDate);
     jsonObject.Birthday = timestamp;
+    
+    //changing last contact date to firestore timestamp
+    let lastContactDate = new Date(jsonObject.Last_Contact);
+    timestamp = firebase.firestore.Timestamp.fromDate(lastContactDate);
+    jsonObject.Last_Contact = timestamp;
 
+    console.log(jsonObject);
     let result = await addExecutiveAccount(jsonObject);
     if (result){
         window.location.reload();
@@ -99,29 +108,31 @@ form_createAccount.addEventListener("submit", async (ev) => {
         alert("Failed to add a new data")
     }
 })
-async function addExecutiveAccount(jsonObject){
-    return await addExecutiveAccount_db(jsonObject);
-}
 
 
 // Update Account
 function fillUpdateForm(updateButton){
     let accountDataElement = updateButton.parentNode.parentNode;
-    let data = accountDataElement.dataset;
+    let data = JSON.parse(accountDataElement.dataset.allData);
 
     //fill the update form
-    form_updateAccount.dataset.objectId = data.objectId;
-    update_Firstname.placeholder = data.Firstname;
-    update_Lastname.placeholder = data.Lastname;
-    update_Email.placeholder = data.Email;
-    update_Linkedin.placeholder = data.Linkedin;
+    form_updateAccount.dataset.objectId = data["_id"];
 
-    update_Firstname.value = "";
-    update_Lastname.value = "";
+    update_Firstname.value = data.Firstname;
+    update_Lastname.value = data.Lastname;
     update_Active.value = data.Active;
-    update_Email.value = "";
-    update_Linkedin.value = "";
-    update_Birthday.value = data.Birthday;
+    update_Email.value = data.Email;
+    update_Linkedin.value = data.Linkedin;
+    update_Birthday.value = timestampToDate_formInput(data.Birthday.seconds);
+
+    update_Location.value = data.Location;
+    update_Serving.value = data.Serving;
+    update_Title.value = data.Title;
+    update_Department.value = data.Department;
+    update_Exposure.value = data.Exposure;
+    update_Current_Company.value = data.Current_Company;
+    update_Last_Contact.value = timestampToDate_formInput(data.Last_Contact.seconds);
+    update_Last_Comments.value = data.Last_Comments;
 }
 form_updateAccount.addEventListener("submit",(ev)=>{
     ev.preventDefault();
@@ -131,24 +142,34 @@ async function updateExecutiveAccount(){
     let confirmation = confirm("are you sure?")
     if (confirmation){
         //get all the data ready for the api
-        let objectId = form_updateAccount.dataset.objectId;
-        let Firstname = update_Firstname.value === "" ? update_Firstname.placeholder : update_Firstname.value;
-        let Lastname = update_Lastname.value === "" ? update_Lastname.placeholder : update_Lastname.value;
-        let Email = update_Email.value === "" ? update_Email.placeholder : update_Email.value;
-        let Linkedin = update_Linkedin.value === "" ? update_Linkedin.placeholder : update_Linkedin.value;
-        let Active = update_Active.value;
-        let Birthday = update_Birthday.value;
-        
+        let formData = new FormData(form_updateAccount);
+        //convert form data to json
+        let jsonObject = {};
+        for (const [key, value] of formData.entries()) {
+            jsonObject[key] = value;
+        }
         //convert the birthday date to firestore timestamp
-        Birthday = firebase.firestore.Timestamp.fromDate(new Date(Birthday));
+        let birthdayDate = new Date(jsonObject.Birthday);
+        let timestamp = firebase.firestore.Timestamp.fromDate(birthdayDate);
+        jsonObject.Birthday = timestamp;
+        
+        //changing last contact date to firestore timestamp
+        let lastContactDate = new Date(jsonObject.Last_Contact);
+        timestamp = firebase.firestore.Timestamp.fromDate(lastContactDate);
+        jsonObject.Last_Contact = timestamp;
 
         //procceed with the api
-        let result = await updateAccount_db(objectId, Firstname, Lastname, Active, Email, Linkedin, Birthday);
-        if (result){
-            window.location.reload();
-        }else{
-            let message = await request.text();
-            alert("Failed: " + message)
+        let objectId = form_updateAccount.dataset.objectId;
+        try {
+            let result = await updateAccount_db(objectId, jsonObject);
+            if (result){
+                window.location.reload();
+            }else{
+                let message = await request.text();
+                alert("Failed: " + message)
+            }
+        } catch (err) {
+            console.error(err);
         }
     }
 }
@@ -156,7 +177,8 @@ async function updateExecutiveAccount(){
 // Delete Accounts
 async function deleteAccount(deleteButton){
     let accountDataElement = deleteButton.parentNode.parentNode;
-    let objectID = accountDataElement.dataset.objectId;
+    let data = JSON.parse(accountDataElement.dataset.allData);
+    let objectID = data["_id"];
 
     let confirmation = confirm("Are you sure ?")
     if (confirmation){
