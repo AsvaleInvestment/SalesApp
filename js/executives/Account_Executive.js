@@ -38,7 +38,6 @@ async function getAllAccounts(Firstname = ""){
     spinnerStatus(false);
     try{
         const jsonData = await getAllAccountExecutives(Firstname);
-        console.log(jsonData);
         showAccounts(jsonData);
     }catch (err){
         if (! err instanceof SyntaxError){

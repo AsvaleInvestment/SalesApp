@@ -28,6 +28,35 @@ async function getAllAccounts_db(Firstname = ""){
     })
 }
 
+/**
+ * @returns accounts in json
+ */
+async function getAllAccount_contactToday(){
+    return new Promise((resolve,reject)=>{        
+        const daysAgo = new Date();
+        console.log("day: ", daysAgo);
+        daysAgo.setDate(daysAgo.getDate() - 30);
+        console.log("day: ", daysAgo);
+
+        const thirtyDaysAgoTimestamp = firebase.firestore.Timestamp.fromDate(daysAgo);
+
+        let data = [];
+        let query = db.collection(collection)
+                    .where("Last_Contact", "<=", thirtyDaysAgoTimestamp);
+
+        query.get()
+        .then((querySnapshot) => {
+            querySnapshot.forEach((doc) => {
+                let docData = {"_id": doc.id, ...doc.data()}
+                data.push(docData);
+            });
+            resolve(data);
+        })
+        .catch((err)=>{
+            reject(err)
+        });
+    })
+}
 
 /**
  * @returns accounts in json
